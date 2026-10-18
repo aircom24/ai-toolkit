@@ -1,0 +1,35 @@
+# Working data: only the .gitkeep placeholders are versioned
+inputs/*
+!inputs/.gitkeep
+outputs/*
+!outputs/.gitkeep
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+
+# Local Claude Code state
+.claude/settings.local.json
+.claude/.cc-writes/
+
+# Editors and operating system
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*~
+
+# Temporary files and logs
+*.tmp
+*.log
+tmp/
+
+# Secrets and private data (never commit)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
