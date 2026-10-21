@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<title id="page-title">Karta przepisu</title>
+<style>
+/* Left 16 mm of the sheet is the binder margin; the holes sit in it. */
+@page { size: A5 portrait; margin: 6mm 0 22mm 0; }
+*, *::before, *::after { box-sizing: border-box; }
+:root { --page-h: 210mm; --page-w: 148mm; --rule: #333; }
+body {
+  font-family: 'Montserrat', 'Avenir Next', 'Avenir', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 8.5pt;
+  line-height: 1.45;
+  letter-spacing: 0.02em;
+  color: #333;
+  margin: 0;
+  padding: 0;
+  background: #e0e0e0;
+}
+.page {
+  position: relative;
+  background: white;
+  width: var(--page-w);
+  min-height: var(--page-h);
+  margin: 12mm auto;
+  padding: 10mm 10mm 10mm 16mm;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+  display: flex;
+  flex-direction: column;
+}
+@media print {
+  body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .page { margin: 0; padding: 0 10mm 0 16mm; box-shadow: none; width: auto; min-height: calc(var(--page-h) - 12mm); }
+}
+/* Two-hole binder punch, 80 mm apart, centred on the page height. */
+.hole {
+  position: absolute;
+  left: 7mm;
+  top: 50%;
+  width: 6mm;
+  height: 6mm;
+  margin-top: -3mm;
+  border: 0.6pt solid #999;
+  border-radius: 50%;
+  background: white;
+}
+.hole.top { transform: translateY(-40mm); }
+.hole.bottom { transform: translateY(40mm); }
+@media print {
+  /* Fixed in print, so the holes sit on the sheet rather than on the full-height container. */
+  .hole { position: fixed; }
+}
+.title {
+  font-family: 'Josefin Sans', 'Avenir Next', 'Futura', 'Helvetica Neue', sans-serif;
+  font-weight: 400;
+  font-size: 18pt;
+  line-height: 1.2;
+  letter-spacing: 0.14em;
+  text-align: center;
+  text-transform: uppercase;
+  margin: 0 0 4mm;
+}
+.rule { border: 0; border-top: 0.9pt solid var(--rule); margin: 0; }
+.meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3.5mm 2mm;
+}
+.meta-cell { display: flex; align-items: center; gap: 3mm; }
+.meta-cell svg { display: block; flex-shrink: 0; }
+.meta-text {
+  font-size: 6.5pt;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-align: center;
+  line-height: 1.7;
+}
+.meta-sep { width: 0; height: 8mm; border-left: 0.9pt solid var(--rule); }
+.body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 36% 1fr;
+  grid-template-rows: auto auto;
+  margin: 3mm 0;
+}
+.cell-left  { padding: 0 4mm 0 0; }
+.cell-right { padding: 0 0 0 4mm; border-left: 0.9pt solid var(--rule); }
+.cell-bottom { padding-top: 4mm; }
+h2 {
+  font-family: inherit;
+  font-size: 9.5pt;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  margin: 1mm 0 1.5mm;
+}
+h3 { font-size: 8.5pt; font-weight: 500; margin: 3mm 0 0.5mm; }
+.bullets { list-style: none; margin: 0; padding: 0; }
+.bullets li { position: relative; padding-left: 4mm; margin-bottom: 0.6pt; }
+.bullets li::before { content: '•'; position: absolute; left: 1mm; }
+.nutrition table { font-size: 7.5pt; border-collapse: collapse; }
+.nutrition td { padding: 0.3pt 6pt 0.3pt 0; border-bottom: 0.4pt solid #ccc; white-space: nowrap; }
+.nutrition .basis { font-style: italic; font-size: 7pt; }
+.description p { margin: 0 0 2mm; font-style: italic; }
+.steps { margin: 0; padding: 0; list-style: none; counter-reset: step; }
+.steps li { position: relative; padding-left: 5mm; margin-bottom: 1.2pt; counter-increment: step; }
+.steps li::before { content: counter(step) '.'; position: absolute; left: 0; width: 4mm; text-align: right; }
+.steps li.group { display: block; padding-left: 0; margin: 1.5mm 0 0.4mm; font-weight: 500; counter-increment: none; }
+.steps li.group::before { content: none; }
+.extra { margin: 2.5mm 0 0; }
+.extra b { font-weight: 500; }
+#photo { display: none; width: 100%; height: 100%; max-height: 42mm; object-fit: cover; }
+.footer { margin-top: 2mm; font-size: 7.5pt; color: #333; letter-spacing: 0.02em; }
+/* Printed sources come from the page margin box (see render), on every page. */
+@media print { .footer { display: none; } }
+</style>
+</head>
+<body>
+
+<!-- RECIPE_DATA_PLACEHOLDER -->
+<script>
+window.RECIPE = window.RECIPE || {
+  title: "Przykładowy przepis",
+  date: "2026-01-01",
+  meta: { prep_time: "10 min", total_time: "25 min", servings: "6 porcji" },
+  tools: ["duża miska", "trzepaczka", "patelnia"],
+  ingredients: ["300 g mąki", "1 łyżeczka proszku do pieczenia", "2 jajka", "300 ml mleka"],
+  optional_ingredients: "masło do smażenia",
+  description: [],
+  steps: [
+    "Przesiej mąkę z proszkiem do pieczenia do dużej miski.",
+    "Dodaj jajka i mleko, ubij na gładkie ciasto.",
+    "Smaż na rozgrzanym maśle z obu stron do zrumienienia."
+  ],
+  control_point: "",
+  storage: "",
+  nutrition: {},
+  sources: []
+};
+
+const ICON_ATTR = 'fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"';
+const SVG = {
+  plate: `<svg width="30" height="30" viewBox="0 0 32 32" ${ICON_ATTR}>`
+    + '<circle cx="16" cy="16" r="9"/><circle cx="16" cy="16" r="6"/>'
+    + '<path d="M3 6v6a1.5 1.5 0 0 0 3 0V6M4.5 6v20"/>'
+    + '<path d="M28 6c-2 2-2.5 6-2.5 9h2.5v11"/></svg>',
+  watch: `<svg width="30" height="30" viewBox="0 0 32 32" ${ICON_ATTR}>`
+    + '<circle cx="18" cy="18" r="10"/><path d="M16 5h4M18 5v3M26 8.5l1.8-1.8M26.9 6l1.6 1.6"/>'
+    + '<path d="M18 12v6l3.5 2.5"/><path d="M2 14h5M3 18h4M2 22h5"/></svg>',
+};
+
+const NUTRITION_LABELS = [
+  ['energy_kcal','Energia (kcal)'], ['protein_g','Białko (g)'],    ['fat_g','Tłuszcz (g)'],
+  ['carbs_g','Węglowodany (g)'],    ['sugars_g','w tym cukry (g)'], ['fiber_g','Błonnik (g)'],
+  ['salt_g','Sól (g)'],
+];
+
+// Printable content height per page size (paper height minus top and bottom margin)
+const PAGE_HEIGHTS = { 'A5': '210mm', 'A4': '297mm', 'A6': '148mm', 'letter': '279.4mm' };
+
+function t(v) { return String(v == null ? '' : v); }
+function filled(list) { return (list || []).filter(s => t(s).trim()); }
+
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text != null) e.textContent = t(text);
+  return e;
+}
+
+function bulletBlock(parent, heading, items) {
+  if (!items.length) return;
+  if (heading) parent.appendChild(el('h3', null, heading));
+  const ul = el('ul', 'bullets');
+  items.forEach(i => ul.appendChild(el('li', null, i)));
+  parent.appendChild(ul);
+}
+
+function render(r) {
+  const meta = r.meta || {};
+
+  if (r._page_size) {
+    const s = document.createElement('style');
+    s.textContent = `@page { size: ${r._page_size}; margin: 6mm 0 22mm 0; }`;
+    document.head.appendChild(s);
+    const key = r._page_size.split(' ')[0];
+    if (PAGE_HEIGHTS[key]) document.documentElement.style.setProperty('--page-h', PAGE_HEIGHTS[key]);
+  }
+
+  document.getElementById('page-title').textContent = t(r.title);
+  document.getElementById('title').textContent = t(r.title);
+
+  // Meta row: servings | preparation | total time, separated by vertical rules
+  const row = document.getElementById('meta-row');
+  [
+    [SVG.plate, 'Porcje',          meta.servings],
+    [SVG.watch, 'Przygotowanie:',  meta.prep_time],
+    [SVG.watch, 'Czas całkowity:', meta.total_time],
+  ].filter(([, , v]) => t(v).trim()).forEach(([icon, label, value], i) => {
+    if (i) row.appendChild(el('div', 'meta-sep'));
+    const cell = el('div', 'meta-cell');
+    cell.innerHTML = icon;
+    const text = el('div', 'meta-text');
+    text.append(el('div', null, label), el('div', null, value));
+    cell.appendChild(text);
+    row.appendChild(cell);
+  });
+
+  // Left column: ingredients, optional ingredients, tools
+  const left = document.getElementById('left');
+  bulletBlock(left, '', filled(r.ingredients));
+  bulletBlock(left, 'Opcjonalnie:', filled([r.optional_ingredients]));
+  bulletBlock(left, 'Narzędzia:', filled(r.tools));
+
+  // Bottom left: nutrition table, only when at least one value is given.
+  const nutr = r.nutrition || {};
+  const nutrRows = NUTRITION_LABELS.filter(([k]) => t(nutr[k]).trim());
+  const nutrition = document.getElementById('nutrition');
+  if (!nutrRows.length) {
+    nutrition.style.display = 'none';
+  } else {
+    nutrition.append(el('h3', null, 'Składniki odżywcze'), el('div', 'basis', nutr.basis || 'na porcję'));
+    const table = el('table');
+    nutrRows.forEach(([k, l]) => {
+      const tr = el('tr');
+      tr.append(el('td', null, l), el('td', null, nutr[k]));
+      table.appendChild(tr);
+    });
+    nutrition.appendChild(table);
+  }
+
+  // Right column: description, steps, control point, storage
+  const desc = document.getElementById('description');
+  filled(r.description).forEach(s => desc.appendChild(el('p', null, s)));
+
+  const steps = document.getElementById('steps');
+  // A step is a text, or a group {heading, steps}: the heading is not numbered and the numbering runs on.
+  filled(r.steps).forEach(s => {
+    if (typeof s === 'string') { steps.appendChild(el('li', null, s)); return; }
+    steps.appendChild(el('li', 'group', s.heading));
+    filled(s.steps).forEach(x => steps.appendChild(el('li', null, x)));
+  });
+
+  const right = document.getElementById('right');
+  [['Punkt kontrolny:', r.control_point], ['Przechowywanie:', r.storage]]
+    .filter(([, v]) => t(v).trim())
+    .forEach(([label, value]) => {
+      const p = el('p', 'extra');
+      p.append(el('b', null, label + ' '), document.createTextNode(t(value)));
+      right.appendChild(p);
+    });
+
+  // Bottom right: photo, when one is given
+  if (r._photo) {
+    const img = document.getElementById('photo');
+    img.src = r._photo;
+    img.style.display = 'block';
+  }
+
+  // Footer: the sources only, printed in the bottom page margin of every page
+  const sources = filled(r.sources);
+  const footerText = sources.length ? `Źródła: ${sources.join('; ')}` : '';
+  document.getElementById('footer').textContent = footerText;
+  const footerRule = document.createElement('style');
+  const cssText = footerText.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  footerRule.textContent = `@page { @bottom-center { content: "${cssText}"; font-family: 'Montserrat', 'Avenir Next', 'Avenir', 'Helvetica Neue', Arial, sans-serif; font-size: 7.5pt; color: #333; text-align: left; vertical-align: top; padding-top: 2mm; padding-left: 16mm; padding-right: 10mm; } }`;
+  document.head.appendChild(footerRule);
+}
+
+document.addEventListener('DOMContentLoaded', () => render(window.RECIPE));
+</script>
+
+<div class="page">
+  <div class="hole top"></div>
+  <div class="hole bottom"></div>
+  <h1 class="title" id="title"></h1>
+  <hr class="rule">
+  <div class="meta-row" id="meta-row"></div>
+  <hr class="rule">
+
+  <div class="body">
+    <div class="cell-left" id="left">
+      <h2>Składniki</h2>
+    </div>
+    <div class="cell-right" id="right">
+      <h2>Przygotowanie</h2>
+      <div class="description" id="description"></div>
+      <ol class="steps" id="steps"></ol>
+    </div>
+    <div class="cell-left cell-bottom nutrition" id="nutrition"></div>
+    <div class="cell-right cell-bottom" id="photo-cell">
+      <img id="photo" alt="">
+    </div>
+  </div>
+
+  <hr class="rule">
+  <div class="footer" id="footer"></div>
+</div>
+
+</body>
+</html>
